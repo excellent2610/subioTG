@@ -27,8 +27,8 @@ export const renderDashboardPage = (state) => {
           </div>
         </div>
         <div class="subscription-actions">
-          <button class="button ghost">Edit</button>
-          <button class="button">Remove</button>
+          <button class="button info">Edit</button>
+          <button class="button danger">Remove</button>
           <button class="button primary">Paid</button>
         </div>
       </div>

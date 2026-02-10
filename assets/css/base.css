@@ -24,7 +24,7 @@ html, body {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: radial-gradient(circle at top, rgba(30, 41, 59, 0.35), transparent 45%), var(--surface-0);
+  background: radial-gradient(circle at top, rgba(30, 41, 59, 0.45), transparent 50%), var(--surface-0);
   color: var(--text-1);
 }
 
