@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="grid-2">
+  <div class="card">
+    <h3>Profile</h3>
+    <form method="post" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <label>Name
+        <input type="text" name="name" value="{{ user.name }}" required />
+      </label>
+      <label>Email
+        <input type="email" name="email" value="{{ user.email }}" required />
+      </label>
+      <label>Avatar URL
+        <input type="text" name="avatar" value="{{ user.avatar or '' }}" />
+      </label>
+      <button class="btn primary" type="submit">Save profile</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Password</h3>
+    <form method="post" action="{{ url_for('profile_password') }}" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <label>New password
+        <input type="password" name="password" required minlength="6" />
+      </label>
+      <label>Confirm
+        <input type="password" name="confirm" required minlength="6" />
+      </label>
+      <button class="btn ghost" type="submit">Update password</button>
+    </form>
+    <div class="divider"></div>
+    <h4>Active subscriptions</h4>
+    <ul>
+      {% for sub in subscriptions %}
+        <li>{{ sub.plan }} · {{ sub.status }} · ends {{ sub.end_date }}</li>
+      {% else %}
+        <li>No active subscriptions.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

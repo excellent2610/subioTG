@@ -6,28 +6,42 @@ export const renderNavbar = (state) => {
   if (!navbar) return;
 
   navbar.innerHTML = "";
+  const isAuthed = state.session?.authenticated;
+  const user = state.user;
 
-  const navLinks = ROUTES.map((route) => `
-    <a class="topbar-link ${window.location.hash === route.path ? "active" : ""}" href="${route.path}">
-      ${route.label}
-    </a>
-  `).join("");
+  const navLinks = ROUTES.filter((route) => !route.auth || isAuthed)
+    .map((route) => `
+      <a class="topbar-link ${window.location.hash === route.path ? "active" : ""}" href="${route.path}">
+        ${route.label}
+      </a>
+    `)
+    .join("");
+
+  const authButtons = isAuthed
+    ? `
+      <button id="theme-toggle" class="button ghost">${state.theme === "theme-dark" ? "Light" : "Dark"}</button>
+      <a class="button pill" href="#profile">${user?.name || "Profile"}</a>
+      <button id="logout" class="button primary pill">Logout</button>
+    `
+    : `
+      <button id="theme-toggle" class="button ghost">${state.theme === "theme-dark" ? "Light" : "Dark"}</button>
+      <a class="button pill" href="#login">Login</a>
+      <a class="button primary pill" href="#register">Create account</a>
+    `;
 
   const wrapper = createElement(`
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-brand">
+        <a class="topbar-brand" href="#dashboard">
           <span class="brand-dot"></span>
           <span>SUBIO</span>
-        </div>
+        </a>
         <nav class="topbar-nav">
           ${navLinks}
         </nav>
       </div>
       <div class="topbar-actions">
-        <button id="theme-toggle" class="button ghost">${state.theme === "theme-dark" ? "Light" : "Dark"}</button>
-        <button class="button pill">Profile</button>
-        <button id="open-modal" class="button primary pill">Add</button>
+        ${authButtons}
       </div>
     </div>
   `);

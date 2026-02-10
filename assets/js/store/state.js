@@ -11,7 +11,12 @@ const defaultState = {
     autoSync: true,
     dataRegion: "us-east-1"
   },
-  data: null
+  data: null,
+  session: { authenticated: false },
+  user: null,
+  subscriptions: [],
+  payments: [],
+  supportTickets: []
 };
 
 let state = { ...defaultState };
@@ -32,11 +37,21 @@ export const hydrate = () => {
   const storedTheme = storageService.get(STORAGE_KEYS.theme, null);
   const storedRoute = storageService.get(STORAGE_KEYS.lastRoute, null);
   const storedPrefs = storageService.get(STORAGE_KEYS.preferences, null);
+  const storedSession = storageService.get(STORAGE_KEYS.session, null);
+  const storedUser = storageService.get(STORAGE_KEYS.user, null);
+  const storedSubscriptions = storageService.get(STORAGE_KEYS.subscriptions, null);
+  const storedPayments = storageService.get(STORAGE_KEYS.payments, null);
+  const storedSupport = storageService.get(STORAGE_KEYS.support, null);
 
   state = {
     ...state,
     theme: storedTheme || state.theme,
     lastRoute: storedRoute || state.lastRoute,
-    preferences: storedPrefs || state.preferences
+    preferences: storedPrefs || state.preferences,
+    session: storedSession || state.session,
+    user: storedUser || state.user,
+    subscriptions: storedSubscriptions || state.subscriptions,
+    payments: storedPayments || state.payments,
+    supportTickets: storedSupport || state.supportTickets
   };
 };

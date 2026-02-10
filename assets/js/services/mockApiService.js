@@ -2,6 +2,15 @@ import { uid } from "../utils/helpers.js";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const mockUser = {
+  id: "usr_demo",
+  name: "Alex Subio",
+  email: "alex@subio.dev",
+  avatar: "assets/img/logo.svg",
+  plan: "Pro",
+  status: "Active"
+};
+
 const fallbackData = {
   metrics: [
     { label: "Active agents", value: 342, delta: 6.4 },
@@ -47,9 +56,20 @@ const fallbackData = {
   ]
 };
 
+const mockSubscriptions = [
+  { id: "sub_basic", plan: "Basic", price: 9, status: "Active", renewal: "2026-02-28" },
+  { id: "sub_pro", plan: "Pro", price: 19, status: "Active", renewal: "2026-03-12" }
+];
+
+const mockPayments = [
+  { id: "pay_1", amount: 19, date: "2026-02-01", method: "Stripe", status: "Paid" },
+  { id: "pay_2", amount: 19, date: "2026-01-01", method: "Stripe", status: "Paid" },
+  { id: "pay_3", amount: 9, date: "2025-12-01", method: "PayPal", status: "Paid" }
+];
+
 export const mockApiService = {
   async fetchDashboardData() {
-    await sleep(180);
+    await sleep(160);
     try {
       const response = await fetch("data/mockData.json");
       if (!response.ok) {
@@ -60,8 +80,48 @@ export const mockApiService = {
       return fallbackData;
     }
   },
-  async submitPreferenceUpdate(payload) {
+  async register(payload) {
+    await sleep(220);
+    return { ...mockUser, name: payload.name, email: payload.email };
+  },
+  async login(payload) {
+    await sleep(180);
+    if (!payload.email || !payload.password) {
+      throw new Error("Email and password are required");
+    }
+    return { ...mockUser, email: payload.email };
+  },
+  async requestPasswordReset(email) {
+    await sleep(200);
+    if (!email) throw new Error("Email is required");
+    return { status: "sent", email };
+  },
+  async updateProfile(payload) {
+    await sleep(200);
+    return { ...mockUser, ...payload };
+  },
+  async updatePassword() {
+    await sleep(220);
+    return { status: "updated" };
+  },
+  async listSubscriptions() {
+    await sleep(160);
+    return mockSubscriptions;
+  },
+  async listPayments() {
+    await sleep(160);
+    return mockPayments;
+  },
+  async createSubscription(plan) {
     await sleep(240);
-    return { id: uid(), ...payload, status: "accepted" };
+    return { id: uid(), plan, price: plan === "Premium" ? 49 : plan === "Pro" ? 19 : 9, status: "Active", renewal: "2026-03-28" };
+  },
+  async cancelSubscription(id) {
+    await sleep(200);
+    return { id, status: "Canceled" };
+  },
+  async createSupportTicket(payload) {
+    await sleep(200);
+    return { id: uid(), ...payload, status: "Open", created: new Date().toISOString() };
   }
 };

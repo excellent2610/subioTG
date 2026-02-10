@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-grid">
+  <div class="card">
+    <h2>Create account</h2>
+    <p>Start building premium bot experiences.</p>
+    <form method="post" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <label>Name
+        <input type="text" name="name" required />
+      </label>
+      <label>Email
+        <input type="email" name="email" required />
+      </label>
+      <label>Avatar URL (optional)
+        <input type="text" name="avatar" />
+      </label>
+      <label>Password
+        <input type="password" name="password" required minlength="6" />
+      </label>
+      <label>Confirm password
+        <input type="password" name="confirm" required minlength="6" />
+      </label>
+      <button class="btn primary" type="submit">Create account</button>
+    </form>
+  </div>
+  <div class="card aside">
+    <h3>Secure onboarding</h3>
+    <p>We validate every operator and protect your data with hashing.</p>
+    <ul>
+      <li>Encrypted passwords</li>
+      <li>Session protection</li>
+      <li>Access control</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card narrow">
+  <h2>Set new password</h2>
+  <p>Choose a strong password for your account.</p>
+  <form method="post" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <label>Password
+      <input type="password" name="password" required minlength="6" />
+    </label>
+    <label>Confirm
+      <input type="password" name="confirm" required minlength="6" />
+    </label>
+    <button class="btn primary" type="submit">Update password</button>
+  </form>
+</section>
+{% endblock %}

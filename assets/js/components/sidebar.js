@@ -23,7 +23,8 @@ export const renderSidebar = (activeRoute) => {
   const primaryLabel = createElement(`<div class="nav-section">Primary</div>`);
   nav.appendChild(primaryLabel);
 
-  ROUTES.forEach((route) => {
+  ROUTES.filter((route) => !route.auth || activeRoute !== "#login" && activeRoute !== "#register")
+    .forEach((route) => {
     const link = createElement(`
       <a class="nav-link ${activeRoute === route.path ? "active" : ""}" href="${route.path}">
         <span>${route.icon}</span>

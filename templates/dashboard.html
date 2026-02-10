@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="grid-2">
+  <div class="card">
+    <h3>Welcome back</h3>
+    <p>Track your premium bot performance and billing status.</p>
+  </div>
+  <div class="card">
+    <h3>Active subscriptions</h3>
+    <p>{{ subscriptions|length }} active plans</p>
+  </div>
+</section>
+
+<section class="card">
+  <h3>Subscriptions</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in subscriptions %}
+        <tr>
+          <td>{{ sub.plan }}</td>
+          <td>{{ sub.status }}</td>
+          <td>{{ sub.start_date }}</td>
+          <td>{{ sub.end_date }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No subscriptions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h3>Payment history</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pay in payments %}
+        <tr>
+          <td>${{ pay.amount }}</td>
+          <td>{{ pay.method }}</td>
+          <td>{{ pay.status }}</td>
+          <td>{{ pay.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No payments found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

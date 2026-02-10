@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-grid">
+  <div class="card">
+    <h2>Sign in</h2>
+    <p>Access your SUBIO subscriptions and analytics.</p>
+    <form method="post" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <label>Email
+        <input type="email" name="email" required />
+      </label>
+      <label>Password
+        <input type="password" name="password" required minlength="6" />
+      </label>
+      <button class="btn primary" type="submit">Login</button>
+      <a class="btn ghost" href="{{ url_for('reset_request') }}">Forgot password</a>
+    </form>
+  </div>
+  <div class="card aside">
+    <h3>Production-ready platform</h3>
+    <p>Manage premium bot workflows with real-time billing.</p>
+    <ul>
+      <li>Payment history and invoices</li>
+      <li>Tiered subscription plans</li>
+      <li>Priority support</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}
