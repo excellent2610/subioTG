@@ -50,6 +50,8 @@ def init_db():
             status TEXT NOT NULL,
             start_date TEXT NOT NULL,
             end_date TEXT NOT NULL,
+            billing_cycle TEXT DEFAULT 'monthly',
+            currency TEXT DEFAULT 'USD',
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
 
@@ -61,6 +63,7 @@ def init_db():
             status TEXT NOT NULL,
             created_at TEXT NOT NULL,
             subscription_id INTEGER,
+            currency TEXT DEFAULT 'USD',
             FOREIGN KEY(user_id) REFERENCES users(id),
             FOREIGN KEY(subscription_id) REFERENCES subscriptions(id)
         );
@@ -74,6 +77,19 @@ def init_db():
         );
         """
     )
+    db.commit()
+    try:
+        db.execute("ALTER TABLE subscriptions ADD COLUMN billing_cycle TEXT DEFAULT 'monthly'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE subscriptions ADD COLUMN currency TEXT DEFAULT 'USD'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE payments ADD COLUMN currency TEXT DEFAULT 'USD'")
+    except sqlite3.OperationalError:
+        pass
     db.commit()
 
 
@@ -370,6 +386,49 @@ def subscriptions():
     return render_template(
         "subscriptions.html", plans=plans, subscriptions=subscriptions, payments=payments
     )
+
+
+@app.route("/add_subscription", methods=["GET", "POST"])
+@login_required
+def add_subscription():
+    user = get_user(session["user_id"])
+    plans = [
+        {"name": "Basic", "price": 9},
+        {"name": "Pro", "price": 19},
+        {"name": "Premium", "price": 49},
+    ]
+    if request.method == "POST":
+        if not validate_csrf():
+            flash("Invalid session token.", "error")
+            return redirect(url_for("add_subscription"))
+        plan = request.form.get("plan")
+        billing_cycle = request.form.get("billing_cycle", "monthly")
+        currency = request.form.get("currency", "USD")
+        method = request.form.get("method", "Stripe")
+        base_price = next((p["price"] for p in plans if p["name"] == plan), 9)
+        multiplier = 10 if billing_cycle == "yearly" else 1
+        price = base_price * multiplier
+        start = datetime.utcnow()
+        end = start + timedelta(days=365 if billing_cycle == "yearly" else 30)
+        db = get_db()
+        cursor = db.execute(
+            "INSERT INTO subscriptions (user_id, plan, price, status, start_date, end_date, billing_cycle, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (user["id"], plan, price, "Active", start.isoformat(), end.isoformat(), billing_cycle, currency),
+        )
+        subscription_id = cursor.lastrowid
+        db.execute(
+            "INSERT INTO payments (user_id, amount, method, status, created_at, subscription_id, currency) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (user["id"], price, method, "Paid", datetime.utcnow().isoformat(), subscription_id, currency),
+        )
+        db.execute(
+            "UPDATE users SET plan = ?, status = ? WHERE id = ?",
+            (plan, "Active", user["id"]),
+        )
+        db.commit()
+        flash(f"{plan} subscription activated.", "success")
+        return redirect(url_for("subscriptions"))
+
+    return render_template("add_subscription.html", plans=plans)
 
 
 if __name__ == "__main__":

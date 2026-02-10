@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Add subscription</h2>
+  <p>Choose a plan, billing cycle, and currency. The converter will preview the total.</p>
+  <form method="post" class="form-stack" id="subscription-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <label>Plan
+      <select name="plan" id="plan-select">
+        {% for plan in plans %}
+          <option value="{{ plan.name }}" data-price="{{ plan.price }}">{{ plan.name }} - ${{ plan.price }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Billing cycle
+      <select name="billing_cycle" id="billing-cycle">
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+    </label>
+    <label>Currency
+      <select name="currency" id="currency">
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+        <option value="UAH">UAH (₴)</option>
+      </select>
+    </label>
+    <label>Payment method
+      <select name="method">
+        <option>Stripe</option>
+        <option>PayPal</option>
+      </select>
+    </label>
+    <div class="converter card">
+      <div>
+        <strong>Preview</strong>
+        <div id="preview-amount" class="price">$0</div>
+        <small id="preview-note">Monthly payment</small>
+      </div>
+      <div class="muted">
+        Rates: USD → EUR 0.92, USD → UAH 38.2
+      </div>
+    </div>
+    <button class="btn primary" type="submit">Activate subscription</button>
+  </form>
+</section>
+{% endblock %}
