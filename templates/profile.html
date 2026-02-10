@@ -8,11 +8,23 @@
       <label>Name
         <input type="text" name="name" value="{{ user.name }}" required />
       </label>
+      <label>Last name
+        <input type="text" name="last_name" value="{{ user.last_name or '' }}" />
+      </label>
       <label>Email
         <input type="email" name="email" value="{{ user.email }}" required />
       </label>
       <label>Avatar URL
         <input type="text" name="avatar" value="{{ user.avatar or '' }}" />
+      </label>
+      <label>Phone
+        <input type="text" name="phone" value="{{ user.phone or '' }}" />
+      </label>
+      <label>Theme
+        <select name="theme">
+          <option value="dark" {% if theme != 'light' %}selected{% endif %}>Dark</option>
+          <option value="light" {% if theme == 'light' %}selected{% endif %}>Light</option>
+        </select>
       </label>
       <button class="btn primary" type="submit">Save profile</button>
     </form>
@@ -36,6 +48,15 @@
         <li>{{ sub.plan }} · {{ sub.status }} · ends {{ sub.end_date }}</li>
       {% else %}
         <li>No active subscriptions.</li>
+      {% endfor %}
+    </ul>
+    <div class="divider"></div>
+    <h4>Recent activity</h4>
+    <ul>
+      {% for item in activity %}
+        <li>{{ item.action }} · {{ item.created_at }}</li>
+      {% else %}
+        <li>No activity recorded.</li>
       {% endfor %}
     </ul>
   </div>

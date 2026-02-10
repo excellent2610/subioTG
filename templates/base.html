@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="{{ 'light' if theme == 'light' else 'dark' }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,7 +26,7 @@
         {% endif %}
       </nav>
       <div class="actions">
-        <button id="theme-toggle" class="btn ghost" type="button">Theme</button>
+        <button id="theme-toggle" class="btn ghost" type="button" data-theme="{{ theme }}">Theme</button>
         {% if user %}
           <a class="btn primary" href="{{ url_for('logout') }}">Logout</a>
         {% endif %}

@@ -35,10 +35,15 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             name TEXT NOT NULL,
+            last_name TEXT,
             password_hash TEXT NOT NULL,
             avatar TEXT,
             plan TEXT DEFAULT 'Free',
             status TEXT DEFAULT 'Inactive',
+            phone TEXT,
+            theme TEXT DEFAULT 'dark',
+            blocked INTEGER DEFAULT 0,
+            is_admin INTEGER DEFAULT 0,
             created_at TEXT NOT NULL
         );
 
@@ -75,6 +80,15 @@ def init_db():
             expires_at TEXT NOT NULL,
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
+
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            action TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            ip_address TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        );
         """
     )
     db.commit()
@@ -88,6 +102,26 @@ def init_db():
         pass
     try:
         db.execute("ALTER TABLE payments ADD COLUMN currency TEXT DEFAULT 'USD'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN last_name TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'dark'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN blocked INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
     except sqlite3.OperationalError:
         pass
     db.commit()
@@ -111,6 +145,11 @@ def verify_password(password, stored):
 def login_required(view):
     def wrapped(*args, **kwargs):
         if "user_id" not in session:
+            return redirect(url_for("login"))
+        user = get_user(session["user_id"])
+        if user and user["blocked"]:
+            session.pop("user_id", None)
+            flash("Account is blocked. Contact support.", "error")
             return redirect(url_for("login"))
         return view(*args, **kwargs)
 
@@ -142,6 +181,15 @@ def get_user_payments(user_id):
     ).fetchall()
 
 
+def log_activity(user_id, action):
+    db = get_db()
+    db.execute(
+        "INSERT INTO activity_log (user_id, action, created_at, ip_address) VALUES (?, ?, ?, ?)",
+        (user_id, action, datetime.utcnow().isoformat(), request.remote_addr),
+    )
+    db.commit()
+
+
 @app.before_request
 def ensure_csrf():
     if "csrf_token" not in session:
@@ -150,7 +198,9 @@ def ensure_csrf():
 
 @app.context_processor
 def inject_globals():
-    return {"csrf_token": session.get("csrf_token"), "user": get_user(session["user_id"]) if "user_id" in session else None}
+    user = get_user(session["user_id"]) if "user_id" in session else None
+    theme = session.get("theme") or (user["theme"] if user else "dark")
+    return {"csrf_token": session.get("csrf_token"), "user": user, "theme": theme}
 
 
 def validate_csrf():
@@ -173,10 +223,12 @@ def register():
             return redirect(url_for("register"))
 
         name = request.form.get("name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         confirm = request.form.get("confirm", "")
         avatar = request.form.get("avatar", "").strip()
+        phone = request.form.get("phone", "").strip()
 
         if len(password) < 6:
             flash("Password must be at least 6 characters.", "error")
@@ -189,13 +241,16 @@ def register():
             return redirect(url_for("register"))
 
         db = get_db()
+        is_admin = 1 if email.endswith("@subio.dev") else 0
         db.execute(
-            "INSERT INTO users (email, name, password_hash, avatar, created_at) VALUES (?, ?, ?, ?, ?)",
-            (email, name, hash_password(password), avatar or None, datetime.utcnow().isoformat()),
+            "INSERT INTO users (email, name, last_name, password_hash, avatar, phone, is_admin, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (email, name, last_name or None, hash_password(password), avatar or None, phone or None, is_admin, datetime.utcnow().isoformat()),
         )
         db.commit()
         user = get_user_by_email(email)
         session["user_id"] = user["id"]
+        session["theme"] = user["theme"]
+        log_activity(user["id"], "register")
         flash("Account created successfully.", "success")
         return redirect(url_for("dashboard"))
 
@@ -215,7 +270,12 @@ def login():
         if not user or not verify_password(password, user["password_hash"]):
             flash("Invalid email or password.", "error")
             return redirect(url_for("login"))
+        if user["blocked"]:
+            flash("Account is blocked. Contact support.", "error")
+            return redirect(url_for("login"))
         session["user_id"] = user["id"]
+        session["theme"] = user["theme"]
+        log_activity(user["id"], "login")
         flash("Welcome back!", "success")
         return redirect(url_for("dashboard"))
 
@@ -224,7 +284,9 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("user_id", None)
+    user_id = session.pop("user_id", None)
+    if user_id:
+        log_activity(user_id, "logout")
     flash("You have been logged out.", "info")
     return redirect(url_for("login"))
 
@@ -286,6 +348,7 @@ def reset_confirm(token):
         )
         db.execute("DELETE FROM reset_tokens WHERE token = ?", (token,))
         db.commit()
+        log_activity(record["user_id"], "password_reset")
         flash("Password updated.", "success")
         return redirect(url_for("login"))
 
@@ -310,18 +373,27 @@ def profile():
             flash("Invalid session token.", "error")
             return redirect(url_for("profile"))
         name = request.form.get("name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
         email = request.form.get("email", "").strip().lower()
         avatar = request.form.get("avatar", "").strip()
+        phone = request.form.get("phone", "").strip()
+        theme = request.form.get("theme", "dark")
         db = get_db()
         db.execute(
-            "UPDATE users SET name = ?, email = ?, avatar = ? WHERE id = ?",
-            (name, email, avatar or None, user["id"]),
+            "UPDATE users SET name = ?, last_name = ?, email = ?, avatar = ?, phone = ?, theme = ? WHERE id = ?",
+            (name, last_name or None, email, avatar or None, phone or None, theme, user["id"]),
         )
         db.commit()
+        session["theme"] = theme
+        log_activity(user["id"], "profile_update")
         flash("Profile updated.", "success")
         return redirect(url_for("profile"))
     subscriptions = get_user_subscriptions(user["id"])
-    return render_template("profile.html", subscriptions=subscriptions)
+    activity = get_db().execute(
+        "SELECT * FROM activity_log WHERE user_id = ? ORDER BY created_at DESC LIMIT 10",
+        (user["id"],),
+    ).fetchall()
+    return render_template("profile.html", subscriptions=subscriptions, activity=activity)
 
 
 @app.route("/profile/password", methods=["POST"])
@@ -341,8 +413,22 @@ def profile_password():
         (hash_password(password), session["user_id"]),
     )
     db.commit()
+    log_activity(session["user_id"], "password_change")
     flash("Password updated.", "success")
     return redirect(url_for("profile"))
+
+
+@app.route("/theme", methods=["POST"])
+@login_required
+def theme():
+    if not validate_csrf():
+        return ("Invalid token", 400)
+    mode = request.form.get("theme", "dark")
+    session["theme"] = mode
+    db = get_db()
+    db.execute("UPDATE users SET theme = ? WHERE id = ?", (mode, session["user_id"]))
+    db.commit()
+    return ("", 204)
 
 
 @app.route("/subscriptions", methods=["GET", "POST"])
