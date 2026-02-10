@@ -1,4 +1,5 @@
 import { createElement, qs } from "../utils/dom.js";
+import { ROUTES } from "../utils/constants.js";
 
 export const renderNavbar = (state) => {
   const navbar = qs("#navbar");
@@ -6,19 +7,27 @@ export const renderNavbar = (state) => {
 
   navbar.innerHTML = "";
 
+  const navLinks = ROUTES.map((route) => `
+    <a class="topbar-link ${window.location.hash === route.path ? "active" : ""}" href="${route.path}">
+      ${route.label}
+    </a>
+  `).join("");
+
   const wrapper = createElement(`
-    <div class="navbar-row">
-      <div>
-        <div style="font-size: 1.2rem; font-weight: 600;">${state.pageTitle}</div>
-        <div style="color: var(--text-3); font-size: 0.85rem;">${state.pageSubtitle}</div>
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-brand">
+          <span class="brand-dot"></span>
+          <span>SUBIO</span>
+        </div>
+        <nav class="topbar-nav">
+          ${navLinks}
+        </nav>
       </div>
-      <div class="navbar-actions">
-        <label class="search-input">
-          <span>🔎</span>
-          <input type="search" placeholder="Search workflows, agents..." />
-        </label>
-        <button id="theme-toggle" class="button">${state.theme === "theme-dark" ? "Light" : "Dark"} mode</button>
-        <button id="open-modal" class="button primary">New incident</button>
+      <div class="topbar-actions">
+        <button id="theme-toggle" class="button ghost">${state.theme === "theme-dark" ? "Light" : "Dark"}</button>
+        <button class="button pill">Profile</button>
+        <button id="open-modal" class="button primary pill">Add</button>
       </div>
     </div>
   `);

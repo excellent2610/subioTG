@@ -1,21 +1,13 @@
 /* Layout primitives */
 .app-shell {
-  display: grid;
-  grid-template-columns: 280px 1fr;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: var(--surface-0);
 }
 
 .app-sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  background: var(--surface-1);
-  border-right: 1px solid var(--border);
-  padding: 1.75rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: none;
 }
 
 .app-main {
@@ -25,13 +17,13 @@
 }
 
 .app-navbar {
-  padding: 1.5rem 2.5rem 1rem;
+  padding: 1.25rem 2.5rem;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(120deg, rgba(255,255,255,0.04), transparent);
+  background: var(--surface-1);
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-2);
 }
 
 .app-content {
@@ -39,6 +31,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--grid-gap);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .grid-2 {
@@ -74,17 +69,6 @@
 }
 
 @media (max-width: 1100px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .app-sidebar {
-    position: relative;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
   .grid-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
