@@ -1,0 +1,32 @@
+/* Themes */
+.theme-dark {
+  --surface-0: #0b111f;
+  --surface-1: #121a2b;
+  --surface-2: #1a243a;
+  --border: rgba(255, 255, 255, 0.08);
+  --text-1: #f4f6fb;
+  --text-2: #c8d0e0;
+  --text-3: #8b95ab;
+  --accent: #56c0ff;
+  --accent-strong: #8ce9b2;
+}
+
+.theme-light {
+  --surface-0: #f5f7fb;
+  --surface-1: #ffffff;
+  --surface-2: #eef2f8;
+  --border: rgba(15, 23, 42, 0.12);
+  --text-1: #111827;
+  --text-2: #4b5563;
+  --text-3: #6b7280;
+  --accent: #0058ff;
+  --accent-strong: #39b0ff;
+}
+
+.theme-light .app-navbar {
+  background: linear-gradient(120deg, rgba(0, 88, 255, 0.08), transparent);
+}
+
+.theme-light .hero-card {
+  background: linear-gradient(135deg, rgba(0, 88, 255, 0.08), rgba(57, 176, 255, 0.04));
+}
